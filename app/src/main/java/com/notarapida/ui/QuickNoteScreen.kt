@@ -78,6 +78,7 @@ fun QuickNoteScreen(onClose: () -> Unit) {
         VoiceDictation(
             context = context,
             language = Prefs.language(context),
+            preferOffline = Prefs.offlineVoice(context),
             onPartialText = { text = joinText(baseText, it) },
             onFinalText = { text = joinText(baseText, it) },
             onListeningChange = { listening = it },

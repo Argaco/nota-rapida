@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,29 +30,33 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.notarapida.data.Note
 import kotlinx.coroutines.delay
 
 /**
- * Crear o editar un apunte. Al volver atrás se guarda solo, si hay texto y cambió.
+ * Crear o editar un apunte. Al volver atrás se guarda solo, si hay texto y algo cambió.
  * note == null es un apunte nuevo; onDelete == null oculta el botón de eliminar.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditorScreen(
     note: Note?,
-    onSave: (String) -> Unit,
+    onSave: (String, Boolean) -> Unit,
     onDelete: (() -> Unit)?,
     onBack: () -> Unit,
 ) {
+    val context = LocalContext.current
     var text by remember { mutableStateOf(note?.text ?: "") }
+    var pinned by remember { mutableStateOf(note?.pinned ?: false) }
     var confirmDelete by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
 
     fun saveAndBack() {
         val clean = text.trim()
-        if (clean.isNotEmpty() && clean != note?.text) onSave(clean)
+        val changed = clean != note?.text || pinned != (note?.pinned ?: false)
+        if (clean.isNotEmpty() && changed) onSave(clean, pinned)
         onBack()
     }
 
@@ -73,6 +79,22 @@ fun EditorScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { pinned = !pinned }) {
+                        Icon(
+                            Icons.Filled.PushPin,
+                            contentDescription = if (pinned) "Quitar de fijados" else "Fijar apunte",
+                            tint = if (pinned) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            },
+                        )
+                    }
+                    if (text.isNotBlank()) {
+                        IconButton(onClick = { shareText(context, "Apunte", text.trim()) }) {
+                            Icon(Icons.Filled.Share, contentDescription = "Compartir apunte")
+                        }
+                    }
                     if (onDelete != null) {
                         IconButton(onClick = { confirmDelete = true }) {
                             Icon(Icons.Default.Delete, contentDescription = "Eliminar apunte")

@@ -28,17 +28,24 @@ class NotesViewModel(app: Application) : AndroidViewModel(app) {
         _query.value = value
     }
 
-    fun add(text: String) {
-        viewModelScope.launch { dao.insert(Note(text = text)) }
+    fun add(text: String, pinned: Boolean) {
+        viewModelScope.launch { dao.insert(Note(text = text, pinned = pinned)) }
     }
 
-    fun update(note: Note, text: String) {
+    fun update(note: Note, text: String, pinned: Boolean) {
         viewModelScope.launch {
-            dao.update(note.copy(text = text, updatedAt = System.currentTimeMillis()))
+            dao.update(
+                note.copy(text = text, pinned = pinned, updatedAt = System.currentTimeMillis()),
+            )
         }
     }
 
     fun delete(note: Note) {
         viewModelScope.launch { dao.delete(note) }
+    }
+
+    /** Arma el texto con TODOS los apuntes (sin importar la búsqueda) y lo entrega en onReady. */
+    fun exportAll(onReady: (String) -> Unit) {
+        viewModelScope.launch { onReady(exportText(dao.getAll())) }
     }
 }

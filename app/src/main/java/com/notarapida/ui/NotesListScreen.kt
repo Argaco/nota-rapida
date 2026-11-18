@@ -5,19 +5,23 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,6 +58,7 @@ fun NotesListScreen(
     onOpen: (Note) -> Unit,
     onNew: () -> Unit,
     onSettings: () -> Unit,
+    onExport: () -> Unit,
 ) {
     val context = LocalContext.current
     var floatingOn by remember { mutableStateOf(true) }
@@ -67,6 +72,9 @@ fun NotesListScreen(
             TopAppBar(
                 title = { Text("Mis apuntes") },
                 actions = {
+                    IconButton(onClick = onExport) {
+                        Icon(Icons.Default.Share, contentDescription = "Exportar todos los apuntes")
+                    }
                     IconButton(onClick = onSettings) {
                         Icon(Icons.Default.Settings, contentDescription = "Ajustes")
                     }
@@ -170,7 +178,18 @@ private fun NoteCard(note: Note, onClick: () -> Unit) {
                 style = MaterialTheme.typography.bodyLarge,
             )
             Spacer(Modifier.height(8.dp))
-            Text(formatDate(note.createdAt), style = MaterialTheme.typography.labelSmall)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (note.pinned) {
+                    Icon(
+                        Icons.Default.PushPin,
+                        contentDescription = "Fijado",
+                        modifier = Modifier
+                            .size(14.dp)
+                            .padding(end = 4.dp),
+                    )
+                }
+                Text(formatDate(note.createdAt), style = MaterialTheme.typography.labelSmall)
+            }
         }
     }
 }

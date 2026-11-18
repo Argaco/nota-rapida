@@ -22,6 +22,10 @@ escribes o dictas con el micrófono, y el apunte queda guardado en la lista.
 ## Qué incluye
 
 - Lista de apuntes, el último guardado primero, con buscador, edición y eliminación.
+- Apuntes fijados: el alfiler del editor los deja arriba de la lista.
+- Compartir un apunte desde el editor y exportar todos como texto desde la lista (menú de compartir de Android).
+- Dictado sin internet cuando el teléfono lo permite; si el idioma no está descargado, usa internet.
+- Ícono propio: una nota adhesiva amarilla.
 - Nota rápida transparente sobre cualquier app, con dictado por voz en tiempo real.
 - Botón flotante arrastrable que se pega al borde de la pantalla.
 - Ajustes: activar o desactivar el botón, idioma del dictado, empezar a dictar al abrir la nota.
@@ -39,7 +43,7 @@ escribes o dictas con el micrófono, y el apunte queda guardado en la lista.
 
 ## Límites conocidos
 
-- El dictado usa el reconocimiento de voz de Google: en muchos teléfonos necesita internet.
+- El dictado sin internet depende del teléfono: necesita Android 13 o más nuevo, o el idioma descargado en la app Google. Si no, usa internet.
 - Mientras el botón está activo, Android muestra un aviso fijo en las notificaciones. Es obligatorio
   para que el servicio no se cierre.
 - Decir la palabra "nota" para abrir la nota queda para la versión 2.

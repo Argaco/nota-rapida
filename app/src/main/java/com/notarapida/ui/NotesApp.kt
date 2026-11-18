@@ -1,5 +1,6 @@
 package com.notarapida.ui
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -45,6 +46,16 @@ fun NotaRapidaApp(vm: NotesViewModel = viewModel()) {
                 onOpen = { screen = Screen.Editor(it) },
                 onNew = { screen = Screen.Editor(null) },
                 onSettings = { screen = Screen.Config },
+                onExport = {
+                    vm.exportAll { text ->
+                        if (text.isBlank()) {
+                            Toast.makeText(context, "No hay apuntes para exportar", Toast.LENGTH_SHORT)
+                                .show()
+                        } else {
+                            shareText(context, "Mis apuntes", text)
+                        }
+                    }
+                },
             )
 
             Screen.Config -> SettingsScreen(onBack = { screen = Screen.Home })
@@ -53,8 +64,8 @@ fun NotaRapidaApp(vm: NotesViewModel = viewModel()) {
                 val note = current.note
                 EditorScreen(
                     note = note,
-                    onSave = { text ->
-                        if (note == null) vm.add(text) else vm.update(note, text)
+                    onSave = { text, pinned ->
+                        if (note == null) vm.add(text, pinned) else vm.update(note, text, pinned)
                     },
                     onDelete = if (note == null) {
                         null

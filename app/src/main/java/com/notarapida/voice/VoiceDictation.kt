@@ -2,33 +2,56 @@ package com.notarapida.voice
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 
 /**
  * Dictado por voz con el reconocimiento de Android.
+ * Si preferOffline es verdadero, intenta primero dictar sin internet (reconocimiento en el
+ * propio teléfono). Si el idioma no está descargado, pasa solo al dictado con internet.
  * Debe usarse siempre desde el hilo principal.
  */
 class VoiceDictation(
     private val context: Context,
     private val language: String,
+    private val preferOffline: Boolean,
     private val onPartialText: (String) -> Unit,
     private val onFinalText: (String) -> Unit,
     private val onListeningChange: (Boolean) -> Unit,
     private val onMessage: (String) -> Unit,
 ) {
     private var recognizer: SpeechRecognizer? = null
+    private val handler = Handler(Looper.getMainLooper())
 
     fun start() {
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+        begin(offline = preferOffline)
+    }
+
+    private fun begin(offline: Boolean) {
+        recognizer?.destroy()
+        recognizer = null
+
+        val onDevice = offline &&
+            Build.VERSION.SDK_INT >= 33 &&
+            SpeechRecognizer.isOnDeviceRecognitionAvailable(context)
+
+        if (!onDevice && !SpeechRecognizer.isRecognitionAvailable(context)) {
+            onListeningChange(false)
             onMessage("Este teléfono no tiene reconocimiento de voz disponible.")
             return
         }
-        destroy()
 
-        val newRecognizer = SpeechRecognizer.createSpeechRecognizer(context)
+        val newRecognizer = if (onDevice) {
+            SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
+        } else {
+            SpeechRecognizer.createSpeechRecognizer(context)
+        }
+
         newRecognizer.setRecognitionListener(object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 onListeningChange(true)
@@ -43,6 +66,12 @@ class VoiceDictation(
             override fun onEndOfSpeech() {}
 
             override fun onError(error: Int) {
+                // Sin el idioma descargado para dictar sin internet: probamos con internet.
+                if (onDevice && isLanguageProblem(error)) {
+                    onMessage("Idioma sin descargar para dictar sin internet. Usando internet.")
+                    handler.post { begin(offline = false) }
+                    return
+                }
                 onListeningChange(false)
                 onMessage(messageFor(error))
             }
@@ -68,6 +97,8 @@ class VoiceDictation(
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, language)
             putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            // En teléfonos sin reconocimiento propio, pide el modo sin conexión si está disponible.
+            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, offline)
         }
         newRecognizer.startListening(intent)
     }
@@ -79,10 +110,15 @@ class VoiceDictation(
 
     /** Libera el reconocedor. Se puede llamar varias veces. */
     fun destroy() {
+        handler.removeCallbacksAndMessages(null)
         recognizer?.destroy()
         recognizer = null
         onListeningChange(false)
     }
+
+    private fun isLanguageProblem(code: Int): Boolean =
+        code == SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED ||
+            code == SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE
 
     private fun firstResult(bundle: Bundle?): String? =
         bundle
@@ -97,13 +133,17 @@ class VoiceDictation(
 
         SpeechRecognizer.ERROR_NETWORK,
         SpeechRecognizer.ERROR_NETWORK_TIMEOUT ->
-            "Sin conexión: en este teléfono el dictado necesita internet."
+            "Sin conexión: este idioma necesita internet para dictar en este teléfono."
 
         SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ->
             "Falta el permiso del micrófono."
 
         SpeechRecognizer.ERROR_RECOGNIZER_BUSY ->
             "El reconocimiento de voz está ocupado. Inténtalo otra vez."
+
+        SpeechRecognizer.ERROR_LANGUAGE_NOT_SUPPORTED,
+        SpeechRecognizer.ERROR_LANGUAGE_UNAVAILABLE ->
+            "El idioma elegido no está disponible para dictar."
 
         else -> "No se pudo dictar (código $code)."
     }

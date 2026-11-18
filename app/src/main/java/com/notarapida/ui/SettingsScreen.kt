@@ -73,6 +73,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     var floating by remember { mutableStateOf(Prefs.floatingEnabled(context)) }
     var canOverlay by remember { mutableStateOf(Settings.canDrawOverlays(context)) }
     var autoVoice by remember { mutableStateOf(Prefs.autoVoice(context)) }
+    var offlineVoice by remember { mutableStateOf(Prefs.offlineVoice(context)) }
     var language by remember { mutableStateOf(Prefs.language(context)) }
 
     val notificationPermission = rememberLauncherForActivityResult(
@@ -179,6 +180,32 @@ fun SettingsScreen(onBack: () -> Unit) {
             }
             Text(
                 "Funciona solo si ya diste el permiso del micrófono desde la nota.",
+                style = MaterialTheme.typography.bodyMedium,
+            )
+
+            Spacer(Modifier.height(16.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text(
+                    "Dictar sin internet cuando sea posible",
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+                Switch(
+                    checked = offlineVoice,
+                    onCheckedChange = {
+                        offlineVoice = it
+                        Prefs.setOfflineVoice(context, it)
+                    },
+                )
+            }
+            Text(
+                "Si el idioma no está descargado en el teléfono, usa internet. Para descargarlo: " +
+                    "app Google > Ajustes > Voz > Reconocimiento de voz sin conexión " +
+                    "(el nombre puede variar según el teléfono).",
                 style = MaterialTheme.typography.bodyMedium,
             )
 

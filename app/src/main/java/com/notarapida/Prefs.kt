@@ -31,6 +31,14 @@ object Prefs {
         prefs(context).edit().putBoolean("auto_voice", value).apply()
     }
 
+    /** Si está activo, el dictado intenta funcionar sin internet antes de usar la conexión. */
+    fun offlineVoice(context: Context): Boolean =
+        prefs(context).getBoolean("offline_voice", true)
+
+    fun setOfflineVoice(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean("offline_voice", value).apply()
+    }
+
     fun language(context: Context): String =
         prefs(context).getString("language", "es-CO") ?: "es-CO"
 
