@@ -17,6 +17,17 @@ android {
         versionName = "1.1"
     }
 
+    // Llave de depuración fija: así cada APK que se compile (en tu computador o en GitHub)
+    // lleva la misma firma y Android deja instalarlo encima de la versión anterior.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

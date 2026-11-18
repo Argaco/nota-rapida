@@ -48,4 +48,5 @@ escribes o dictas con el micrófono, y el apunte queda guardado en la lista.
   para que el servicio no se cierre.
 - Decir la palabra "nota" para abrir la nota queda para la versión 2.
 - No hay copias de seguridad ni sincronización entre dispositivos.
+- `debug.keystore` es una llave de **depuración** pública, solo para probar. Para publicar en Google Play hay que crear otra, privada, y no subirla al repositorio.
 - El proyecto no trae `gradlew`: Android Studio se encarga de Gradle al abrirlo.
